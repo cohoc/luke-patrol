@@ -7,10 +7,7 @@ const prefix = process.env.PREFIX;
 const watchedUser = {
     isDeafened: false,
     userID: '',
-    userTag: '',
-    userNickname: '',
     defaultUser: 'Hooksh0t#6123',
-    defaultNickname: '',
     voiceChannel: ''
 }
 
@@ -47,7 +44,7 @@ client.once('ready', async () => {
     try{
 
         guildData.guildID = client.guilds.cache.map( guild => guild.id);
-        guildData.guildName = await (await client.guilds.fetch(guildData.guildID)).name;
+        guildData.guildName = await client.guilds.fetch(guildData.guildID).name;
 
         let defaultUser = client.users.cache.find(user => user.tag === "Hooksh0t#6123");
         let userID = defaultUser.id;
@@ -157,10 +154,10 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
     
     if (newChannelID !== oldChannelID) {
         if(newChannelID){
-            console.log(`${newMember.member.user.username} joined ` + newVoiceChannel.name + " with deaf: ", newMember.selfDeaf);
+            console.log(`${newMember.member.user.username} joined ` + newVoiceChannel.name + " with deafened:", newMember.selfDeaf);
         }
         else if(oldChannelID){
-            console.log(`${oldMember.member.user.username} left ` + oldMember.channel.name + " with deaf ", oldMember.selfDeaf);
+            console.log(`${oldMember.member.user.username} left ` + oldMember.channel.name + " with deafened:", oldMember.selfDeaf);
         }
         else{
             console.log("User joined");
