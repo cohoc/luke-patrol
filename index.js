@@ -14,6 +14,7 @@ const watchedUser = {
 const guildData = {
     guildID: '',
     guildName: '',
+    clientVC: ''
 }
 
 
@@ -38,13 +39,12 @@ const userHandler = (arg) => {
     }
 }
 
-
 client.once('ready', async () => {
     console.log('\nLuke Patrol is online in servers: ');
     try{
 
         guildData.guildID = client.guilds.cache.map( guild => guild.id);
-        guildData.guildName = await client.guilds.fetch(guildData.guildID).name;
+        guildData.guildName = (await client.guilds.fetch(guildData.guildID)).name;
 
         let defaultUser = client.users.cache.find(user => user.tag === "Hooksh0t#6123");
         let userID = defaultUser.id;
@@ -85,17 +85,29 @@ client.on('message', async message => {
         let taggedName = taggedUser.nickname ? taggedUser.nickname : taggedUser.user.username;
         let taggedChannel = taggedUser.voice.channel;
         let authorChannel = message.member.voice.channel;
-        watchedUser.voiceChannel = taggedChannel;
+        let disc;
 
-        console.log("Author Channel: " + authorChannel, "Tagged Channel: " + taggedChannel);
+        guildData.clientVC = authorChannel;
+        watchedUser.voiceChannel = taggedChannel;
         watchedUser.isDeafened = taggedUser.voice.selfDeaf;
+        
+        client.user.setStatus('dnd');
         message.channel.send("Acquiring target: " + `**${taggedName}**`);
 
-        client.user.setStatus('dnd');
+        console.log("Author Channel: " + authorChannel, "Tagged Channel: " + taggedChannel);
 
         if(authorChannel === taggedChannel && authorChannel && taggedChannel){
             try{
                 await authorChannel.join();
+                if(taggedUser.voice.selfDeaf){
+                    disc = setTimeout( () => 
+                    { 
+                        taggedUser.voice.setChannel(null); 
+                    }, 3 * 1000);
+                }
+                else if (watchedUser.isDeafened){
+                    clearTimeout(disc);
+                }
             }
             catch (error){
                 console.log(error);
@@ -125,7 +137,7 @@ client.on('message', async message => {
     else if( command === "stop" ){
         try{
             client.user.setStatus('online');
-            watchedUser.voiceChannel.leave();
+            guildData.clientVC.leave();
             watchedUser.userID = '';
         }
         catch (error){
@@ -146,9 +158,10 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
 
     if( newMember.id === watchedUser.userID ){
         watchedUser.isDeafened = newMember.selfDeaf;
+        watchedUser.voiceChannel = newMember.member.voice.channel;
+
         if(watchedUser.isDeafened){   
             newMember.setChannel(null);  
-            console.log("disconnected")
         }
     }
     
